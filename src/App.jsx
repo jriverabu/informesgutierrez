@@ -1,213 +1,187 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { 
+  MessageCircle, MousePointer2, TrendingUp, DollarSign, Users, Eye, 
+  Target, UserCircle, Coffee, Pizza, LayoutDashboard, BarChart3
+} from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell 
+  PieChart, Pie, Cell, Legend 
 } from 'recharts';
-import { 
-  MessageCircle, MousePointer2, TrendingUp, Users, Eye, Target, UserCircle, Coffee
-} from 'lucide-react';
 
-/**
- * Componente Principal para el Dashboard de Gutierrez Coffee.
- * Este archivo se encarga de procesar los datos y renderizar la interfaz
- * utilizando Tailwind CSS para los estilos y Recharts para la visualización.
- */
-const App = () => {
-  // Datos consolidados de las campañas de Gutierrez Coffee
-  const rawData = [
-    { name: "Gutierrez Coffee - Trafico Perfil", result: 1240, type: "Visita Perfil", cost: 120.96, spend: 150000, reach: 32400 },
-    { name: "Guttierez Coffee - Interacción", result: 4016, type: "Interacción", cost: 37.35, spend: 150000, reach: 42876 },
-    { name: "Café de Origen - Especial", result: 34, type: "Mensaje WhatsApp", cost: 4411.76, spend: 150000, reach: 14998 },
-    { name: "Si vienes a Gutierrez...", result: 1016, type: "Interacción", cost: 147.64, spend: 150000, reach: 42876 }
-  ];
+// Datos de las marcas
+const DATA = {
+  autor: [
+    { name: "Campaña Interacción Feb", result: 4491, type: "Interacción", cost: 33.39, spend: 149969, reach: 37561 },
+    { name: "Sushi WhatsApp", result: 34, type: "Mensaje WhatsApp", cost: 4411.76, spend: 150000, reach: 14998 },
+    { name: "Feb Autor Promo", result: 1016, type: "Interacción", cost: 147.64, spend: 150000, reach: 42876 },
+    { name: "Cumpleaños WhatsApp", result: 64, type: "Mensaje WhatsApp", cost: 2319.41, spend: 148442, reach: 9494 },
+    { name: "Cócteles Interacción", result: 302, type: "Interacción", cost: 331.13, spend: 100000, reach: 38892 },
+    { name: "Tarta Queso Promo", result: 2162, type: "Interacción", cost: 69.01, spend: 149190, reach: 50000 }
+  ],
+  memos: [
+    { name: "Promo Pizza 2x1", result: 45, type: "Mensaje WhatsApp", cost: 3333.33, spend: 150000, reach: 15600 },
+    { name: "Interacción Borde Queso", result: 3115, type: "Interacción", cost: 48.15, spend: 150000, reach: 31343 },
+    { name: "Tráfico Visita Perfil", result: 1240, type: "Visita Perfil", cost: 120.96, spend: 150000, reach: 32400 },
+    { name: "Pizza Diferente Ads", result: 2828, type: "Interacción", cost: 53.04, spend: 150000, reach: 29882 }
+  ],
+  coffee: [
+    { name: "Momentos Café Ads", result: 4491, type: "Interacción", cost: 33.39, spend: 149969, reach: 37561 },
+    { name: "WhatsApp Origen", result: 34, type: "Mensaje WhatsApp", cost: 4411.76, spend: 150000, reach: 14998 },
+    { name: "Promo Febrero Coffee", result: 1016, type: "Interacción", cost: 147.64, spend: 150000, reach: 42876 },
+    { name: "Tráfico Local Perfil", result: 1240, type: "Visita Perfil", cost: 120.96, spend: 150000, reach: 32400 }
+  ]
+};
 
-  // Cálculo de métricas globales mediante useMemo para optimización
-  const totals = useMemo(() => {
-    const totalSpend = rawData.reduce((acc, curr) => acc + curr.spend, 0);
-    const totalMessages = rawData.filter(d => d.type === "Mensaje WhatsApp").reduce((acc, curr) => acc + curr.result, 0);
-    const totalInteractions = rawData.filter(d => d.type === "Interacción").reduce((acc, curr) => acc + curr.result, 0);
-    const totalProfileVisits = rawData.filter(d => d.type === "Visita Perfil").reduce((acc, curr) => acc + curr.result, 0);
-    const totalReach = rawData.reduce((acc, curr) => acc + curr.reach, 0);
-    
-    return {
-      spend: totalSpend,
-      messages: totalMessages,
-      interactions: totalInteractions,
-      profileVisits: totalProfileVisits,
-      reach: totalReach,
-      avgCostResult: totalMessages > 0 ? (rawData.filter(d => d.type === "Mensaje WhatsApp").reduce((acc, curr) => acc + curr.spend, 0) / totalMessages) : 0,
-    };
-  }, []);
+const BRANDS = {
+  autor: { id: 'autor', name: 'Autor', color: 'bg-blue-600', icon: LayoutDashboard, theme: 'blue' },
+  memos: { id: 'memos', name: 'Memos Pizza', color: 'bg-red-600', icon: Pizza, theme: 'red' },
+  coffee: { id: 'coffee', name: 'Gutierrez Coffee', color: 'bg-[#4a3728]', icon: Coffee, theme: 'stone' }
+};
 
-  // Componente de tarjeta de métrica reutilizable
-  const MetricCard = ({ title, value, icon: Icon, color, subtext }) => (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-between">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-stone-500 text-[10px] font-black uppercase tracking-widest">{title}</p>
-          <h3 className="text-3xl font-black mt-2 text-stone-900">{value}</h3>
-        </div>
-        <div className={`p-3 rounded-2xl ${color}`}>
-          <Icon className="text-white" size={24} />
-        </div>
+const MetricCard = ({ title, value, icon: Icon, color, subtext }) => (
+  <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+    <div className="flex justify-between items-start">
+      <div>
+        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{title}</p>
+        <h3 className="text-2xl font-black mt-1 text-slate-800">{value}</h3>
       </div>
-      {subtext && <p className="text-stone-400 text-[11px] mt-4 font-bold italic">{subtext}</p>}
+      <div className={`p-2.5 rounded-2xl ${color}`}>
+        <Icon className="text-white" size={18} />
+      </div>
     </div>
-  );
+    {subtext && <p className="text-slate-400 text-[10px] mt-4 font-bold">{subtext}</p>}
+  </div>
+);
+
+const App = () => {
+  const [activeBrand, setActiveBrand] = useState('autor');
+  const brand = BRANDS[activeBrand];
+  const data = DATA[activeBrand];
+
+  const totals = useMemo(() => {
+    const spend = data.reduce((acc, curr) => acc + curr.spend, 0);
+    const messages = data.filter(d => d.type === "Mensaje WhatsApp").reduce((acc, curr) => acc + curr.result, 0);
+    const interactions = data.filter(d => d.type === "Interacción").reduce((acc, curr) => acc + curr.result, 0);
+    const visits = data.filter(d => d.type === "Visita Perfil").reduce((acc, curr) => acc + curr.result, 0);
+    const reach = data.reduce((acc, curr) => acc + curr.reach, 0);
+    const avgCost = messages > 0 ? (data.filter(d => d.type === "Mensaje WhatsApp").reduce((acc, curr) => acc + curr.spend, 0) / messages) : 0;
+    return { spend, messages, interactions, visits, reach, avgCost };
+  }, [activeBrand]);
+
+  const chartColors = {
+    'Mensaje WhatsApp': brand.theme === 'red' ? '#dc2626' : brand.theme === 'stone' ? '#4a3728' : '#10b981',
+    'Interacción': brand.theme === 'red' ? '#f97316' : brand.theme === 'stone' ? '#8c7355' : '#3b82f6',
+    'Visita Perfil': brand.theme === 'red' ? '#f59e0b' : brand.theme === 'stone' ? '#bf9b7a' : '#8b5cf6'
+  };
 
   return (
-    <div className="min-h-screen bg-[#fcfaf7] p-4 md:p-8 font-sans text-stone-900">
-      {/* Encabezado Principal */}
-      <div className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="bg-[#4a3728] p-4 rounded-2xl shadow-lg">
-            <Coffee className="text-[#d9b99b]" size={32} />
+    <div className="flex min-h-screen w-full bg-slate-50 font-sans">
+      <aside className="w-20 md:w-64 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen">
+        <div className="p-6 flex items-center gap-3">
+          <div className="bg-slate-900 p-2 rounded-xl">
+            <TrendingUp className="text-white" size={20} />
           </div>
-          <div>
-            <h1 className="text-4xl font-black tracking-tight text-[#2c1e14] leading-none uppercase">GUTIERREZ COFFEE</h1>
-            <p className="text-[#8c7355] font-bold mt-1 uppercase text-xs tracking-widest text-center md:text-left">Dashboard de Resultados</p>
+          <span className="font-black text-slate-900 hidden md:block">TRAFFIC DASH</span>
+        </div>
+        <nav className="flex-1 px-4 space-y-2 mt-4">
+          {Object.values(BRANDS).map((b) => (
+            <button
+              key={b.id}
+              onClick={() => setActiveBrand(b.id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all ${
+                activeBrand === b.id ? `${b.color} text-white shadow-lg` : 'hover:bg-slate-100 text-slate-500'
+              }`}
+            >
+              <b.icon size={20} />
+              <span className="font-bold text-sm hidden md:block">{b.name}</span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      <main className="flex-1 p-4 md:p-10 overflow-y-auto">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-4xl font-black tracking-tighter uppercase text-slate-900">{brand.name}</h2>
+              <p className="text-slate-400 font-bold text-xs mt-1 tracking-widest uppercase">Reporte General de Resultados</p>
+            </div>
+            <div className={`${brand.color} px-6 py-4 rounded-3xl text-white shadow-xl`}>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Inversión Total</p>
+              <p className="text-2xl font-black">${totals.spend.toLocaleString()} COP</p>
+            </div>
           </div>
-        </div>
-        <div className="bg-[#4a3728] px-8 py-5 rounded-3xl shadow-2xl shadow-stone-200 border-t border-[#5d4634]">
-          <p className="text-[10px] text-[#d9b99b] font-black uppercase tracking-widest mb-1 text-center md:text-left">Inversión Total</p>
-          <p className="font-black text-white text-2xl">${totals.spend.toLocaleString()} COP</p>
-        </div>
-      </div>
 
-      {/* Grid de KPIs principales */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <MetricCard 
-          title="Mensajes WhatsApp" 
-          value={totals.messages} 
-          icon={MessageCircle} 
-          color="bg-[#4a3728]"
-          subtext={`CPA: $${totals.avgCostResult.toFixed(0)}`}
-        />
-        <MetricCard 
-          title="Interacciones" 
-          value={totals.interactions.toLocaleString()} 
-          icon={MousePointer2} 
-          color="bg-[#8c7355]"
-          subtext="Engagement total"
-        />
-        <MetricCard 
-          title="Visitas al Perfil" 
-          value={totals.profileVisits.toLocaleString()} 
-          icon={UserCircle} 
-          color="bg-[#bf9b7a]"
-          subtext="Tráfico directo"
-        />
-        <MetricCard 
-          title="Alcance Único" 
-          value={totals.reach.toLocaleString()} 
-          icon={Users} 
-          color="bg-stone-800"
-          subtext="Impacto total"
-        />
-      </div>
-
-      {/* Área de Visualización Gráfica */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
-          <h3 className="text-xs font-black text-stone-900 mb-8 uppercase flex items-center gap-2 tracking-widest">
-            <TrendingUp size={18} className="text-[#4a3728]" />
-            Eficiencia por Campaña (Costo)
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={rawData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f1f1" />
-                <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={150} 
-                  tick={{fontSize: 9, fontWeight: 700, fill: '#57534e'}}
-                  axisLine={false}
-                />
-                <Tooltip 
-                  cursor={{fill: '#fcfaf7'}}
-                  contentStyle={{borderRadius: '20px', border: 'none'}}
-                  formatter={(value) => [`$${value.toLocaleString()}`, 'Costo unitario']}
-                />
-                <Bar dataKey="cost" radius={[0, 10, 10, 0]} barSize={32}>
-                  {rawData.map((entry, index) => {
-                    let color = '#8c7355';
-                    if (entry.type === "Mensaje WhatsApp") color = '#4a3728';
-                    if (entry.type === "Visita Perfil") color = '#bf9b7a';
-                    return <Cell key={`cell-${index}`} fill={color} />;
-                  })}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <MetricCard title="WhatsApp" value={totals.messages} icon={MessageCircle} color={brand.color} subtext={`CPA: $${totals.avgCost.toFixed(0)}`} />
+            <MetricCard title="Interacción" value={totals.interactions.toLocaleString()} icon={MousePointer2} color="bg-orange-500" subtext="Engagement" />
+            <MetricCard title="Visitas Perfil" value={totals.visits.toLocaleString()} icon={UserCircle} color="bg-indigo-500" subtext="Tráfico" />
+            <MetricCard title="Alcance" value={totals.reach.toLocaleString()} icon={Users} color="bg-slate-800" subtext="Personas" />
           </div>
-        </div>
 
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 flex flex-col items-center">
-          <h3 className="text-xs font-black text-stone-900 mb-6 uppercase flex items-center gap-2 tracking-widest">
-            <Eye size={18} className="text-[#4a3728]" />
-            Mix de Objetivos
-          </h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: 'Mensajes', value: totals.messages },
-                    { name: 'Interacciones', value: totals.interactions },
-                    { name: 'Visitas', value: totals.profileVisits }
-                  ]}
-                  innerRadius={70}
-                  outerRadius={95}
-                  paddingAngle={10}
-                  dataKey="value"
-                >
-                  <Cell fill="#4a3728" />
-                  <Cell fill="#8c7355" />
-                  <Cell fill="#bf9b7a" />
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-100">
+              <h3 className="text-xs font-black text-slate-800 mb-6 uppercase flex items-center gap-2"><BarChart3 size={16} /> Eficiencia</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 9, fontWeight: 700}} axisLine={false} />
+                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none'}} />
+                    <Bar dataKey="cost" radius={[0, 4, 4, 0]} barSize={20}>
+                      {data.map((entry, index) => <Cell key={index} fill={chartColors[entry.type]} />)}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-3xl border border-slate-100 flex flex-col items-center">
+              <h3 className="text-xs font-black text-slate-800 mb-6 uppercase">Mix de Objetivos</h3>
+              <div className="h-56 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Mensajes', value: totals.messages },
+                        { name: 'Interacciones', value: totals.interactions },
+                        { name: 'Visitas', value: totals.visits }
+                      ]}
+                      innerRadius={50} outerRadius={70} paddingAngle={8} dataKey="value"
+                    >
+                      <Cell fill={chartColors['Mensaje WhatsApp']} />
+                      <Cell fill={chartColors['Interacción']} />
+                      <Cell fill={chartColors['Visita Perfil']} />
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Tabla de Detalle Final */}
-      <div className="max-w-6xl mx-auto bg-white rounded-[2rem] shadow-sm border border-stone-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-[#4a3728] text-[#d9b99b] text-[10px] font-black uppercase tracking-widest">
-                <th className="px-8 py-6">Campaña Activa</th>
-                <th className="px-8 py-6">Tipo</th>
-                <th className="px-8 py-6 text-right">Resultados</th>
-                <th className="px-8 py-6 text-right">Costo unitario</th>
-                <th className="px-8 py-6 text-right">Inversión</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {rawData.map((item, index) => (
-                <tr key={index} className="hover:bg-stone-50 transition-all">
-                  <td className="px-8 py-5 text-xs font-bold text-stone-800">{item.name}</td>
-                  <td className="px-8 py-5">
-                    <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase ${
-                      item.type === 'Mensaje WhatsApp' ? 'bg-[#4a3728] text-white' : 
-                      item.type === 'Visita Perfil' ? 'bg-[#bf9b7a] text-white' : 
-                      'bg-[#8c7355] text-white'
-                    }`}>
-                      {item.type}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right text-xs font-black text-stone-700">{item.result.toLocaleString()}</td>
-                  <td className="px-8 py-5 text-right font-black text-stone-900 text-xs">${item.cost.toLocaleString()}</td>
-                  <td className="px-8 py-5 text-right text-xs font-bold text-stone-400">${item.spend.toLocaleString()}</td>
+          <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">
+                  <th className="px-6 py-4 text-center">Campaña</th>
+                  <th className="px-6 py-4 text-center">Resultados</th>
+                  <th className="px-6 py-4 text-center">Inversión</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.map((item, index) => (
+                  <tr key={index} className="border-t border-slate-50 hover:bg-slate-50/50">
+                    <td className="px-6 py-4 text-xs font-bold text-slate-700">{item.name}</td>
+                    <td className="px-6 py-4 text-xs font-black text-slate-900 text-center">{item.result.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-xs font-bold text-slate-400 text-center">${item.spend.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
