@@ -2,14 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply bg-[#fafafa] text-slate-900;
-  }
-}
-
-@media print {
-  .print\:hidden {
-    display: none !important;
-  }
+/* Ápe ikatu emoĩve estilo oñekotevẽramo */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
 }
